@@ -1,0 +1,41 @@
+# inspired by https://github.com/hauptmedia/docker-jmeter  and
+# https://github.com/hhcordero/docker-jmeter-server/blob/master/Dockerfile and
+# https://github.com/justb4/docker-jmeter
+FROM ${base.image}
+
+ENV JMETER_HOME /opt/apache-jmeter-${jmeter.version}
+ENV	JMETER_BIN	${JMETER_HOME}/bin
+ENV	JMETER_DOWNLOAD_URL  https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${jmeter.version}.tgz
+
+# Install extra packages
+# See https://github.com/gliderlabs/docker-alpine/issues/136#issuecomment-272703023
+# Change TimeZone TODO: TZ still is not set!
+ARG TZ="Europe/Amsterdam"
+RUN    apk update \
+	&& apk upgrade \
+	&& apk add ca-certificates \
+	&& update-ca-certificates \
+	&& apk add --update openjdk8-jre tzdata curl unzip bash \
+	&& apk add --no-cache nss \
+	&& rm -rf /var/cache/apk/* \
+	&& mkdir -p /tmp/dependencies \
+	&& curl -L --silent ${JMETER_DOWNLOAD_URL} > /tmp/dependencies/apache-jmeter-${jmeter.version}.tgz \
+	&& mkdir -p /opt \
+	&& tar -xzf /tmp/dependencies/apache-jmeter-${jmeter.version}.tgz -C /opt \
+	&& rm -rf /tmp/dependencies
+
+# Install JMeter plugins
+RUN    curl -L --silent https://jmeter-plugins.org/files/packages/jpgc-casutg-2.10.zip > /tmp/jpgc-casutg-2.10.zip \
+	&& unzip -d /tmp/jpgc-casutg -q /tmp/jpgc-casutg-2.10.zip \
+	&& cp -rf /tmp/jpgc-casutg/lib /opt/apache-jmeter-${jmeter.version}/ \
+	&& rm -rf /tmp/jpgc-casutg
+
+# Set global PATH such that "jmeter" command is found
+ENV PATH $PATH:$JMETER_BIN
+
+# Entrypoint has same signature as "jmeter" command
+COPY src/main/resources/docker/entrypoint.sh /
+
+WORKDIR	${JMETER_HOME}
+
+ENTRYPOINT ["/entrypoint.sh"]

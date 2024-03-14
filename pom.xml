@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <!--
+    Simple sample program including Java code.
+
+    This helloworld exactly has been taken over mostly from https://github.com/arun-gupta/docker-java-sample.git
+  -->
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.jboss.test</groupId>
+    <artifactId>clusterbench-jmeter-client</artifactId>
+    <packaging>jar</packaging>
+    <version>1.0-SNAPSHOT</version>
+    <name>clusterbench-jmeter-client</name>
+
+    <properties>
+        <base.image>alpine:latest</base.image>
+        <jmeter.version>5.6.3</jmeter.version>
+        <docker-maven-plugin.version>0.44.0</docker-maven-plugin.version>
+        <project.artifactId>${project.artifactId}</project.artifactId>
+        <version.exec-maven-plugin>1.6.0</version.exec-maven-plugin>
+        <version.maven-assembly-plugin>3.6.0</version.maven-assembly-plugin>
+    </properties>
+
+    <dependencies>
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>${version.exec-maven-plugin}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>${version.maven-assembly-plugin}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources/docker</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/Containerfile</include>
+                </includes>
+            </resource>
+        </resources>
+
+        <plugins>
+            <!-- -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>build</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>podman</executable>
+                            <arguments>
+                                <argument>build</argument>
+                                <argument>--format=docker</argument>
+                                <argument>-f</argument>
+                                <argument>target/classes/Containerfile</argument>
+                                <argument>-t</argument>
+                                <argument>quay.io/tborgato/clusterbench-jmeter-client:latest</argument>
+                                <argument>-t</argument>
+                                <argument>quay.io/tborgato/clusterbench-jmeter-client:${project.version}</argument>
+                                <argument>.</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
