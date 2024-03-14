@@ -29,6 +29,10 @@ echo "jmeter args=$@"
 
 # Keep entrypoint simple: we must pass the standard JMeter arguments
 EXTRA_ARGS=-Dlog4j2.formatMsgNoLookups=true
+
+# Samplers
+EXTRA_ARGS="$EXTRA_ARGS -Juser.classpath=/opt/${project.artifactId}/${project.artifactId}-jar-with-dependencies.jar"
+
 echo "jmeter ALL ARGS=${EXTRA_ARGS} $@"
 jmeter ${EXTRA_ARGS} $@
 

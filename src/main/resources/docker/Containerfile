@@ -34,7 +34,12 @@ RUN    curl -L --silent https://jmeter-plugins.org/files/packages/jpgc-casutg-2.
 ENV PATH $PATH:$JMETER_BIN
 
 # Entrypoint has same signature as "jmeter" command
-COPY src/main/resources/docker/entrypoint.sh /
+COPY target/classes/entrypoint.sh /
+RUN chmod +x /entrypoint.sh
+
+# Samplers
+RUN mkdir -p /opt/${project.artifactId}
+COPY target/${project.artifactId}-jar-with-dependencies.jar /opt/${project.artifactId}/
 
 WORKDIR	${JMETER_HOME}
 

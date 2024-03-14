@@ -12,7 +12,7 @@ mvn clean package
 ## run
 
 ```shell
-mvn clean package
+TODO
 ```
 
 ## inspect image

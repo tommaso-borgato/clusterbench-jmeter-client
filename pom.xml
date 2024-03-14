@@ -23,15 +23,88 @@
         <project.artifactId>${project.artifactId}</project.artifactId>
         <version.exec-maven-plugin>1.6.0</version.exec-maven-plugin>
         <version.maven-assembly-plugin>3.6.0</version.maven-assembly-plugin>
+        <version.org.apache.jmeter>5.6.3</version.org.apache.jmeter>
+        <version.org.jboss.test.clusterbench>5.0.0.Final</version.org.jboss.test.clusterbench>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.apache.jmeter</groupId>
+            <artifactId>ApacheJMeter_java</artifactId>
+            <version>${version.org.apache.jmeter}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jmeter</groupId>
+            <artifactId>ApacheJMeter_http</artifactId>
+            <version>${version.org.apache.jmeter}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- EJB client -->
+        <dependency>
+            <groupId>org.jboss</groupId>
+            <artifactId>jboss-ejb-client</artifactId>
+        </dependency>
+
+        <!-- Jakarta dependencies -->
+        <dependency>
+            <groupId>jakarta.ejb</groupId>
+            <artifactId>jakarta.ejb-api</artifactId>
+        </dependency>
+
+        <!-- to compile but provided by JMeter -->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+
+        <!-- clusterbench -->
+        <dependency>
+            <groupId>org.jboss.test</groupId>
+            <artifactId>clusterbench-ee10-ejb</artifactId>
+            <version>${version.org.jboss.test.clusterbench}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jboss.test</groupId>
+            <artifactId>clusterbench-common</artifactId>
+            <version>${version.org.jboss.test.clusterbench}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
     </dependencies>
 
     <build>
+        <finalName>${project.artifactId}</finalName>
+
         <pluginManagement>
             <plugins>
-
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>exec-maven-plugin</artifactId>
@@ -51,12 +124,13 @@
                 <filtering>true</filtering>
                 <includes>
                     <include>**/Containerfile</include>
+                    <include>**/entrypoint.sh</include>
                 </includes>
             </resource>
         </resources>
 
         <plugins>
-            <!-- -->
+            <!-- Samplers -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -104,4 +178,76 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>wildfly</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <version.org.wildfly>30.0.0.Final</version.org.wildfly>
+            </properties>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.wildfly</groupId>
+                        <artifactId>wildfly-ejb-client-bom</artifactId>
+                        <version>${version.org.wildfly}</version>
+                        <scope>import</scope>
+                        <type>pom</type>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.wildfly</groupId>
+                        <artifactId>wildfly-standard-ee-bom</artifactId>
+                        <version>${version.org.wildfly}</version>
+                        <type>pom</type>
+                        <scope>import</scope>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+            <dependencies>
+                <!-- Wildfly client -->
+                <dependency>
+                    <groupId>org.wildfly</groupId>
+                    <artifactId>wildfly-client-all</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>eap</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <version.wildfly-standard-ee-bom>8.0.1.GA-redhat-00001</version.wildfly-standard-ee-bom>
+            </properties>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <!-- org.jboss.eap:wildfly-ejb-client-bom:8.0.0.GA-redhat-00008 -->
+                        <groupId>org.jboss.eap</groupId>
+                        <artifactId>wildfly-ejb-client-bom</artifactId>
+                        <version>${version.wildfly-standard-ee-bom}</version>
+                        <scope>import</scope>
+                        <type>pom</type>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.jboss.eap</groupId>
+                        <artifactId>wildfly-standard-ee-bom</artifactId>
+                        <version>${version.wildfly-standard-ee-bom}</version>
+                        <type>pom</type>
+                        <scope>import</scope>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+            <dependencies>
+                <!-- Wildfly client -->
+                <dependency>
+                    <groupId>org.jboss.eap</groupId>
+                    <artifactId>wildfly-client-all</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 </project>
